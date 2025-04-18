@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Development dependencies
+pytest
+pytest-watch

@@ -4,3 +4,4 @@ modules/*.json
 demos/*.json
 generated
 *.disabled
+.python-version

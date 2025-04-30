@@ -24,16 +24,12 @@ else if (part == 6) {
 function inc(v, a=.6) = [for (i = v) i+a ];
 
 module socket_holder(num_x=1, widths=[], name="", num_z=3) {
-  usable_w = 42*num_x - 6;
+  usable_w = 42*num_x;
   translate_z = num_z*7;
   difference() {
     grid_block(num_x, 2, num_z);
-    rotate([90,0,0]) translate([0,translate_z,0])
-      #sockets(inc(widths,0.6), usable_w);
-    translate([-18,-23-6,5])
-      cube([usable_w,18,26]);
-    translate([-18,-20,10])rotate([90,0,0])
-    translate([-18,-18,22])cube([usable_w,42-6,50]);
+    rotate([270,0,0]) translate([0,0,0])
+      #sockets(inc(widths,0.5), usable_w);
   }
 }
 

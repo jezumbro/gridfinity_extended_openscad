@@ -5,3 +5,6 @@ demos/*.json
 generated
 *.disabled
 .python-version
+out
+.idea
+main.scad

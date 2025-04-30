@@ -3,3 +3,5 @@
 # Development dependencies
 pytest
 pytest-watch
+black
+isort

@@ -1,6 +1,6 @@
 import pytest
 
-from main import Socket, determine_cylinder_spacing
+from model.socket_generator import determine_cylinder_spacing
 
 
 @pytest.mark.parametrize(

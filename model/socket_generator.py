@@ -11,7 +11,7 @@ class SocketGenerator:
     xy_grid = 42
     z_grid = 7
     _offset_spacing = 2.9
-
+    _stackable: bool
     _cylinder_offset = 0.8
 
     def __init__(
@@ -19,6 +19,7 @@ class SocketGenerator:
         sockets: List[MultiLevelSocket | Socket],
         columns: Optional[int] = None,
         height: Optional[int] = None,
+        stackable: bool = False,
     ):
         self.sockets = sockets
         self.rows = math.ceil(max(s.height for s in sockets) / self.xy_grid)
@@ -28,6 +29,7 @@ class SocketGenerator:
         self.units_height = height or (
             math.ceil(max(s.radius for s in sockets) / self.z_grid) + 1
         )
+        self._stackable = stackable
         logger.info(f"starting with {self.rows} rows and {self.columns} columns")
 
     @property
@@ -62,12 +64,27 @@ class SocketGenerator:
 
     @property
     def header_lines(self) -> Iterable[str]:
-        return [
+        double_offset = self._offset_spacing * 2
+        height = (
+            self.units_height
+            if not self._stackable
+            else math.ceil(max(s.diameter for s in self.sockets) / self.z_grid) + 1
+        )
+        grid_block_line = f"grid_block({self.columns},{self.rows},{height}"
+        yield from [
             "include <modules/module_gridfinity.scad>",
             "$fn=64;",
+            "",
             "difference() {",
-            f'grid_block({self.columns},{self.rows},{self.units_height},lip_settings=LipSettings(lipStyle="none"));',
         ]
+        if not self._stackable:
+            grid_block_line += ',lip_settings=LipSettings(lipStyle="none")'
+        grid_block_line += ");"
+        yield grid_block_line
+        yield (
+            f"translate([{self._offset_spacing:.3f},{self._offset_spacing:.3f},{self.z_length:.3f}])"
+            f"cube([{self.x_length-double_offset:.3f},{self.y_length-double_offset:.3f},{2*self.z_length:.3f}]);"
+        )
 
     @property
     def socket_lines(self) -> Iterable[str]:
@@ -137,7 +154,7 @@ def generate_socket_lines(
             [
                 *cylinder_lines,
                 f"translate([{dx:.3f},0,-{(height + x_offset):.3f}])",
-                f"cylinder(h={height:.3f}, d={diameter:.3f});",
+                f"#cylinder(h={height:.3f}, d={diameter:.3f});",
             ]
         )
 

@@ -12,23 +12,24 @@ class SocketGenerator:
     z_grid = 7
     _offset_spacing = 2.9
     _stackable: bool
-    _cylinder_offset = 0.8
+    _cylinder_offset = 1.6
 
     def __init__(
         self,
         sockets: List[MultiLevelSocket | Socket],
+        *,
+        tolerance: float = 0.25,
+        rows: Optional[int] = None,
         columns: Optional[int] = None,
         height: Optional[int] = None,
         stackable: bool = False,
     ):
+        for socket in sockets:
+            socket.add_tolerance(tolerance)
         self.sockets = sockets
-        self.rows = math.ceil(max(s.height for s in sockets) / self.xy_grid)
-        self.columns = columns or math.ceil(
-            (sum(s.diameter for s in sockets) + len(sockets) - 1) / self.xy_grid
-        )
-        self.units_height = height or (
-            math.ceil(max(s.radius for s in sockets) / self.z_grid) + 1
-        )
+        self._rows = rows
+        self._columns = columns
+        self._height = height
         self._stackable = stackable
         logger.info(f"starting with {self.rows} rows and {self.columns} columns")
 
@@ -42,7 +43,46 @@ class SocketGenerator:
 
     @property
     def z_length(self):
-        return self.z_grid * self.units_height
+        return self.z_grid * self.height
+
+    @property
+    def columns(self):
+        if v := self._columns:
+            return v
+        self._columns = math.ceil(
+            (sum(s.diameter for s in self.sockets) + len(self.sockets) - 1)
+            / self.xy_grid
+        )
+        return self._columns
+
+    @property
+    def rows(self):
+        if v := self._rows:
+            return v
+        self._rows = math.ceil(max(s.height for s in self.sockets) / self.xy_grid)
+        return self._rows
+
+    @property
+    def socket_max_radius(self):
+        return max(s.radius for s in self.sockets)
+
+    @property
+    def socket_max_diameter(self):
+        return max(s.diameter for s in self.sockets)
+
+    @property
+    def height(self):
+        if h := self._height:
+            return h
+        return math.ceil((self.socket_max_radius + self.z_grid) / self.z_grid)
+
+    @property
+    def stackable_height(self):
+        if h := self._height:
+            return h
+        if self._stackable:
+            return math.ceil((self.socket_max_diameter + 2 * self.z_grid) / self.z_grid)
+        return math.ceil((self.socket_max_radius + self.z_grid) / self.z_grid)
 
     @property
     def max_socket_radius(self):
@@ -65,12 +105,9 @@ class SocketGenerator:
     @property
     def header_lines(self) -> Iterable[str]:
         double_offset = self._offset_spacing * 2
-        height = (
-            self.units_height
-            if not self._stackable
-            else math.ceil(max(s.diameter for s in self.sockets) / self.z_grid) + 1
+        grid_block_line = (
+            f"grid_block({self.columns},{self.rows},{self.stackable_height}"
         )
-        grid_block_line = f"grid_block({self.columns},{self.rows},{height}"
         yield from [
             "include <modules/module_gridfinity.scad>",
             "$fn=64;",
@@ -81,6 +118,7 @@ class SocketGenerator:
             grid_block_line += ',lip_settings=LipSettings(lipStyle="none")'
         grid_block_line += ");"
         yield grid_block_line
+        yield ""
         yield (
             f"translate([{self._offset_spacing:.3f},{self._offset_spacing:.3f},{self.z_length:.3f}])"
             f"cube([{self.x_length-double_offset:.3f},{self.y_length-double_offset:.3f},{2*self.z_length:.3f}]);"
@@ -108,6 +146,8 @@ class SocketGenerator:
     @property
     def generate_lines(self) -> Iterable[str]:
         yield self.box_cutouts
+        yield ""
+        yield "// start cylinder lines"
         yield from self.socket_lines
 
     def make_cylinder_lines(
@@ -148,7 +188,10 @@ def generate_socket_lines(
     cylinder_lines = ["rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
     for height, diameter in (
         (socket.height, socket.diameter),
-        (socket.height + cylinder_offset + 1, socket.diameter - 2),
+        (
+            socket.height + cylinder_offset + 1,
+            socket.diameter - 4,
+        ),
     ):
         yield "".join(
             [
@@ -179,14 +222,17 @@ def generate_multi_level_socket_lines(
     for height, diameter in (
         (socket.offset, socket.diameter),
         (socket.height, socket.small_diameter),
-        (socket.height + cylinder_offset + 1, socket.small_diameter - 2),
+        (
+            socket.height + cylinder_offset + 1,
+            socket.small_diameter - 4,
+        ),
     ):
         yield "".join(
             [
                 "",
                 *cylinder_lines,
                 f"translate([{dx:.3f},0,-{(height + x_offset):.3f}])",
-                f"cylinder(h={height:.3f}, d={diameter:.3f});",
+                f"#cylinder(h={height:.3f}, d={diameter:.3f});",
             ]
         )
 

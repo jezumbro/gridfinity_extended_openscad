@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional
 
 from loguru import logger
+from more_itertools.more import first, last
 
 from model.socket import MultiLevelSocket, Socket
 
@@ -16,7 +17,7 @@ class SocketGenerator:
 
     def __init__(
         self,
-        sockets: List[MultiLevelSocket | Socket],
+        sockets: List[List[MultiLevelSocket | Socket]],
         *,
         tolerance: float = 0.25,
         rows: Optional[int] = None,
@@ -24,8 +25,11 @@ class SocketGenerator:
         height: Optional[int] = None,
         stackable: bool = False,
     ):
-        for socket in sockets:
-            socket.add_tolerance(tolerance)
+        for row in sockets:
+            max_height = max(s.height for s in row) + tolerance
+            for socket in row:
+                socket.height = max_height
+                socket.add_tolerance(tolerance)
         self.sockets = sockets
         self._rows = rows
         self._columns = columns
@@ -49,26 +53,31 @@ class SocketGenerator:
     def columns(self):
         if v := self._columns:
             return v
-        self._columns = math.ceil(
-            (sum(s.diameter for s in self.sockets) + len(self.sockets) - 1)
-            / self.xy_grid
-        )
+        max_value = 0
+        for row in self.sockets:
+            value = math.ceil(
+                (sum(s.diameter for s in row) + len(row) - 1) / self.xy_grid
+            )
+            max_value = max(max_value, value)
+        self._columns = max_value
         return self._columns
 
     @property
     def rows(self):
         if v := self._rows:
             return v
-        self._rows = math.ceil(max(s.height for s in self.sockets) / self.xy_grid)
+        self._rows = math.ceil(
+            max(s.height for row in self.sockets for s in row) / self.xy_grid
+        )
         return self._rows
 
     @property
     def socket_max_radius(self):
-        return max(s.radius for s in self.sockets)
+        return max(s.radius for row in self.sockets for s in row)
 
     @property
     def socket_max_diameter(self):
-        return max(s.diameter for s in self.sockets)
+        return max(s.diameter for row in self.sockets for s in row)
 
     @property
     def height(self):
@@ -85,21 +94,20 @@ class SocketGenerator:
         return math.ceil((self.socket_max_radius + self.z_grid) / self.z_grid)
 
     @property
-    def max_socket_radius(self):
-        return max(s.radius for s in self.sockets)
-
-    @property
     def box_cutouts(self) -> str:
         x_offset = self._offset_spacing
-        y_offset = (
-            self._offset_spacing
-            + max(s.height for s in self.sockets)
-            + self._cylinder_offset
-        )
-        z_offset = self.z_length - self.max_socket_radius
-        box_y = self.y_length - (self._offset_spacing + y_offset)
-        full_width = self.x_length - (self._offset_spacing * 2)
+        z_offset = self.z_length - self.socket_max_radius
         box_z = (self.z_length - z_offset) + 1
+        full_width = self.x_length - (self._offset_spacing * 2)
+
+        row = first(self.sockets)
+        y_offset = (
+            self._offset_spacing + max(s.height for s in row) + self._cylinder_offset
+        )
+        box_y = self.y_length - (self._offset_spacing + y_offset)
+        if len(self.sockets) > 1:
+            row = last(self.sockets)
+            box_y -= max(s.height for s in row) + self._cylinder_offset
         return f"translate([{x_offset:.3f},{y_offset:.3f},{z_offset:.3f}])cube([{full_width:.3f},{box_y:.3f},{box_z :.3f}]);"
 
     @property
@@ -126,22 +134,24 @@ class SocketGenerator:
 
     @property
     def socket_lines(self) -> Iterable[str]:
-        spacing = determine_cylinder_spacing(
-            self.x_length - 2 * self._offset_spacing,
-            [s.diameter for s in self.sockets],
-            1,
-        )
-        for i, socket in enumerate(self.sockets):
-            trailing = spacing * i + self._offset_spacing
-            dx = trailing + sum((s.diameter for s in self.sockets[:i])) + socket.radius
-            yield (
-                f"translate([{dx:.3f},{socket.height/2 + self._offset_spacing:.3f},{(self.z_length - socket.radius - 0.5):.3f}])"
-                "rotate([0,0,270])"
-                f'linear_extrude({self.z_length-socket.radius})text("{socket.name}",size=6,halign="center",valign="center");'
+        for row_index, row in enumerate(self.sockets):
+            spacing = self.determine_cylinder_spacing(
+                self.x_length - 2 * self._offset_spacing,
+                [s.diameter for s in row],
+                1,
             )
-            yield from self.make_cylinder_lines(
-                socket, dx, x_offset=self._offset_spacing, z_offset=self.z_length
-            )
+            for i, socket in enumerate(row):
+                trailing = spacing * i + self._offset_spacing
+                dx = trailing + sum((s.diameter for s in row[:i])) + socket.radius
+                dy = socket.height / 2 + self._offset_spacing
+                if row_index:
+                    dy = self.y_length - (socket.height / 2 + self._offset_spacing)
+                yield (
+                    f"translate([{dx:.3f},{dy:.3f},{(self.z_length - socket.radius - 0.5):.3f}])"
+                    "rotate([0,0,270])"
+                    f'linear_extrude({self.z_length-socket.radius})text("{socket.name}",size=6,halign="center",valign="center");'
+                )
+                yield from self.make_cylinder_lines(socket, dx, bool(row_index))
 
     @property
     def generate_lines(self) -> Iterable[str]:
@@ -151,15 +161,19 @@ class SocketGenerator:
         yield from self.socket_lines
 
     def make_cylinder_lines(
-        self, socket: Socket | MultiLevelSocket, dx, *, x_offset, z_offset
+        self, socket: Socket | MultiLevelSocket, dx, mirror: bool
     ) -> Iterable[str]:
-        if func := operations[type(socket)]:
+        offset = self._offset_spacing
+        if mirror:
+            offset = self.y_length - self._offset_spacing
+        if func := self.operations[type(socket)]:
             return func(
                 socket,
                 cylinder_offset=self._cylinder_offset,
                 dx=dx,
-                x_offset=x_offset,
-                z_offset=z_offset,
+                offset=offset,
+                z_offset=self.z_length,
+                mirror=mirror,
             )
         raise ValueError(
             f"unable to generate cylinder lines based on type={type(socket)}"
@@ -176,85 +190,120 @@ class SocketGenerator:
             )
             file.write("}")
 
-
-def generate_socket_lines(
-    socket: Socket,
-    *,
-    cylinder_offset: float,
-    dx: float,
-    x_offset: float,
-    z_offset: float,
-) -> Iterable[str]:
-    cylinder_lines = ["rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
-    for height, diameter in (
-        (socket.height, socket.diameter),
-        (
-            socket.height + cylinder_offset + 1,
-            socket.diameter - 4,
-        ),
-    ):
-        yield "".join(
-            [
-                *cylinder_lines,
-                f"translate([{dx:.3f},0,-{(height + x_offset):.3f}])",
-                f"#cylinder(h={height:.3f}, d={diameter:.3f});",
-            ]
+    @staticmethod
+    def generate_socket_lines(
+        socket: Socket,
+        *,
+        cylinder_offset: float,
+        dx: float,
+        offset: float,
+        z_offset: float,
+        mirror: bool,
+    ) -> Iterable[str]:
+        yield f"// {socket.name}"
+        cylinder_lines = ["rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
+        extended_cylinder = socket.height + cylinder_offset + 1
+        items = (
+            (socket.height, socket.diameter, socket.height + offset),
+            (extended_cylinder, socket.diameter - 4, extended_cylinder + offset),
         )
+        if mirror:
+            items = (
+                (
+                    socket.height,
+                    socket.diameter,
+                    offset,
+                ),
+                (
+                    extended_cylinder,
+                    socket.diameter - 4,
+                    extended_cylinder + offset - extended_cylinder,
+                ),
+            )
+        for height, diameter, dy in items:
+            yield "".join(
+                (
+                    *cylinder_lines,
+                    f"translate([{dx:.3f},0,-{dy:.3f}])",
+                    f"#cylinder(h={height:.3f}, d={diameter:.3f});",
+                )
+            )
 
-
-def generate_multi_level_socket_lines(
-    socket: MultiLevelSocket,
-    *,
-    cylinder_offset: float,
-    dx: float,
-    x_offset: float,
-    z_offset: float,
-) -> Iterable[str]:
-    cylinder_lines = ["rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
-    yield "".join(
-        [
-            "",
-            *cylinder_lines,
-            f"translate([{dx:.3f},0,-{(socket.offset + x_offset + socket.transition_length):.3f}])",
-            f"cylinder(h={socket.transition_length:.3f}, d1={socket.small_diameter:.3f}, d2={socket.diameter:.3f});",
-        ]
-    )
-    for height, diameter in (
-        (socket.offset, socket.diameter),
-        (socket.height, socket.small_diameter),
-        (
-            socket.height + cylinder_offset + 1,
-            socket.small_diameter - 4,
-        ),
-    ):
+    @staticmethod
+    def generate_multi_level_socket_lines(
+        socket: MultiLevelSocket,
+        *,
+        cylinder_offset: float,
+        dx: float,
+        offset: float,
+        z_offset: float,
+        mirror: bool,
+    ) -> Iterable[str]:
+        yield f"// {socket.name}"
+        cylinder_lines = ["#rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
+        dy = socket.offset + offset + socket.transition_length
+        if mirror:
+            dy = offset - socket.offset
         yield "".join(
             [
                 "",
                 *cylinder_lines,
-                f"translate([{dx:.3f},0,-{(height + x_offset):.3f}])",
-                f"#cylinder(h={height:.3f}, d={diameter:.3f});",
+                f"translate([{dx:.3f},0,-{dy:.3f}])",
+                (
+                    f"cylinder(h={socket.transition_length:.3f}, d1={socket.diameter:.3f}, d2={socket.small_diameter:.3f});"
+                    if mirror
+                    else f"cylinder(h={socket.transition_length:.3f}, d1={socket.small_diameter:.3f}, d2={socket.diameter:.3f});"
+                ),
             ]
         )
+        extended_cylinder = socket.height + cylinder_offset + 1
 
+        items = (
+            (socket.offset, socket.diameter, socket.offset + offset),
+            (socket.height, socket.small_diameter, socket.height + offset),
+            (
+                extended_cylinder,
+                socket.small_diameter - 4,
+                extended_cylinder + offset,
+            ),
+        )
+        if mirror:
+            items = (
+                (socket.offset, socket.diameter, offset),
+                (socket.height, socket.small_diameter, offset),
+                (
+                    extended_cylinder,
+                    socket.small_diameter - 4,
+                    offset,
+                ),
+            )
+        for height, diameter, dy in items:
+            yield "".join(
+                (
+                    *cylinder_lines,
+                    f"translate([{dx:.3f},0,-{dy:.3f}])",
+                    f"cylinder(h={height:.3f}, d={diameter:.3f});",
+                )
+            )
 
-operations = {
-    Socket: generate_socket_lines,
-    MultiLevelSocket: generate_multi_level_socket_lines,
-}
+    operations = {
+        Socket: generate_socket_lines,
+        MultiLevelSocket: generate_multi_level_socket_lines,
+    }
 
-
-def determine_cylinder_spacing(
-    length: float, cylinders: List[float], min_space: float
-) -> float:
-    """
-    Determines the spacing between the sockets based on their diameters.
-    The spacing is calculated as the maximum diameter plus a fixed spacing value.
-    """
-    assert len(cylinders) > 1, "The list of diameters cannot be empty."
-    num_of_spaces = len(cylinders) - 1
-    leftover = length - (sum(cylinders) + min_space * num_of_spaces)
-    assert (
-        leftover >= 0
-    ), f"The sum of diameters exceeds the length. leftover={leftover}"
-    delta_leftover = (length - sum(cylinders)) / num_of_spaces
-    return delta_leftover
+    @staticmethod
+    def determine_cylinder_spacing(
+        length: float, cylinders: List[float], min_space: float
+    ) -> float:
+        """
+        Determines the spacing between the sockets based on their diameters.
+        The spacing is calculated as the maximum diameter plus a fixed spacing value.
+        """
+        assert len(cylinders) > 1, "The list of diameters cannot be empty."
+        num_of_spaces = len(cylinders) - 1
+        leftover = length - (sum(cylinders) + min_space * num_of_spaces)
+        assert (
+            leftover >= 0
+        ), f"The sum of diameters exceeds the length. leftover={leftover}"
+        delta_leftover = (length - sum(cylinders)) / num_of_spaces
+        return delta_leftover

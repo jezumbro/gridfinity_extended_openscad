@@ -1,0 +1,153 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 11.5,
+        "d2": 6.5,
+        "height": 24,
+        "name": "4mm",
+        "offset": 13.5,
+        "transition": 4
+      },
+      {
+        "d1": 11.45,
+        "d2": 7.7,
+        "height": 24.25,
+        "name": "5mm",
+        "offset": 14,
+        "transition": 4
+      },
+      {
+        "d1": 11.45,
+        "d2": 8.65,
+        "height": 24.5,
+        "name": "5.5mm",
+        "offset": 13.75,
+        "transition": 4
+      },
+      {
+        "d1": 11.3,
+        "d2": 8.94,
+        "height": 24.3,
+        "name": "6mm",
+        "offset": 13.8,
+        "transition": 4
+      },
+      {
+        "d1": 11.4,
+        "d2": 10.13,
+        "height": 24.85,
+        "name": "7mm",
+        "offset": 13.5,
+        "transition": 4
+      },
+      {
+        "d1": 11.45,
+        "height": 24.3,
+        "name": "8mm"
+      },
+      {
+        "d1": 12.41,
+        "height": 24.5,
+        "name": "9mm"
+      },
+      {
+        "d1": 14,
+        "height": 24.5,
+        "name": "10mm"
+      },
+      {
+        "d1": 15.22,
+        "height": 25,
+        "name": "11mm"
+      },
+      {
+        "d1": 16.5,
+        "height": 24.65,
+        "name": "12mm"
+      },
+      {
+        "d1": 17.3,
+        "height": 24.65,
+        "name": "13mm"
+      },
+      {
+        "d1": 19.3,
+        "height": 24.33,
+        "name": "14mm"
+      }
+    ],
+    [
+      {
+        "d1": 11.5,
+        "d2": 6.3,
+        "height": 24,
+        "name": "5/32",
+        "offset": 13.5,
+        "transition": 4
+      },
+      {
+        "d1": 11.4,
+        "d2": 7.7,
+        "height": 24.65,
+        "name": "3/16",
+        "offset": 13.5,
+        "transition": 4
+      },
+      {
+        "d1": 11.38,
+        "d2": 8.4,
+        "height": 24.38,
+        "name": "7/32",
+        "offset": 13.25,
+        "transition": 4
+      },
+      {
+        "d1": 11.35,
+        "d2": 9.8,
+        "height": 24.47,
+        "name": "1/4",
+        "offset": 13.75,
+        "transition": 4
+      },
+      {
+        "d1": 11.4,
+        "d2": 10.4,
+        "height": 24.47,
+        "name": "9/32",
+        "offset": 13.5,
+        "transition": 4
+      },
+      {
+        "d1": 11.44,
+        "height": 24.33,
+        "name": "5/16"
+      },
+      {
+        "d1": 12.35,
+        "height": 24.75,
+        "name": "11/32"
+      },
+      {
+        "d1": 13.95,
+        "height": 24.4,
+        "name": "3/8"
+      },
+      {
+        "d1": 15.13,
+        "height": 24.5,
+        "name": "7/16"
+      },
+      {
+        "d1": 17.25,
+        "height": 24.5,
+        "name": "1/2"
+      },
+      {
+        "d1": 19.36,
+        "height": 24.33,
+        "name": "9/16"
+      }
+    ]
+  ]
+}

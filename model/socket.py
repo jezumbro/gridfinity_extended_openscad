@@ -1,8 +1,6 @@
 import abc
-from dataclasses import dataclass
-from typing import Optional
 
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class Tolerance(abc.ABC):

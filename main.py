@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Iterable, List
 
 from loguru import logger
 from pydantic_core import ValidationError
@@ -48,24 +49,28 @@ imperial_test_set = [
 ]
 
 
-def parse_file(filename: str):
+def parse_file(filename: str) -> Iterable[List[MultiLevelSocket | Socket]]:
     data = json.load(open(filename, "r"))
-    for row in data:
-        try:
-            yield MultiLevelSocket.model_validate(row)
-            continue
-        except ValidationError as e:
-            ...
-        try:
-            yield Socket.model_validate(row, by_alias=True)
-        except ValidationError as e:
-            logger.error(e)
+    for array in data["sockets"]:
+        d = []
+        for row in array:
+            try:
+                d.append(MultiLevelSocket.model_validate(row))
+                continue
+            except ValidationError as e:
+                ...
+            try:
+                d.append(Socket.model_validate(row, by_alias=True))
+            except ValidationError as e:
+                logger.error(e)
+        yield d
 
 
 if __name__ == "__main__":
     socket_generator = SocketGenerator(
-        sockets=list(parse_file("./data/0_25-long-imperial.json")),
+        sockets=list(parse_file("data/0_25-small-set.json")),
         tolerance=0.25,
         stackable=True,
+        rows=2,
     )
     socket_generator.write_file(Path("main.scad"))

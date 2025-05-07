@@ -1,8 +1,7 @@
 import pytest
 
 from main import parse_file
-from model.socket import Socket, MultiLevelSocket
-from model.socket_generator import determine_cylinder_spacing
+from model.socket import MultiLevelSocket, Socket
 
 
 @pytest.mark.parametrize(
@@ -13,9 +12,9 @@ from model.socket_generator import determine_cylinder_spacing
         (2.0, [2, 3]),
     ],
 )
-def test_determine_spacing_throws_error(length, diameters):
+def test_determine_spacing_throws_error(socket_generator, length, diameters):
     with pytest.raises(AssertionError):
-        determine_cylinder_spacing(length, diameters, 1)
+        socket_generator.determine_cylinder_spacing(length, diameters, 1)
 
 
 @pytest.mark.parametrize(
@@ -25,13 +24,13 @@ def test_determine_spacing_throws_error(length, diameters):
         (42.0, [2, 3, 4], 16.5),
     ],
 )
-def test_determine_spacing(length, diameters, expected):
-    output = determine_cylinder_spacing(length, diameters, 1)
+def test_determine_spacing(socket_generator, length, diameters, expected):
+    output = socket_generator.determine_cylinder_spacing(length, diameters, 1)
     assert output == expected, "should return the correct spacing values"
 
 
 def test_parse_file():
-    output = list(parse_file("./data/0_5-long-imperial-socket.json"))
+    output = list(parse_file("./data/0_5-long-imperial.json"))
 
     assert output == [
         MultiLevelSocket(

@@ -1,6 +1,6 @@
 # Parts copied from nophead's canonlicalizer
-import sys
 import struct
+import sys
 
 
 class Vertex:

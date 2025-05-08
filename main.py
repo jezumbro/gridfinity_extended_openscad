@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Iterable, List
 
 from loguru import logger
+from pydantic import BaseModel, Field
 from pydantic_core import ValidationError
 
 from model.socket import MultiLevelSocket, Socket
@@ -49,27 +50,21 @@ imperial_test_set = [
 ]
 
 
-def parse_file(filename: str) -> Iterable[List[MultiLevelSocket | Socket]]:
-    data = json.load(open(filename, "r"))
-    for array in data["sockets"]:
-        d = []
-        for row in array:
-            try:
-                d.append(MultiLevelSocket.model_validate(row))
-                continue
-            except ValidationError as e:
-                ...
-            try:
-                d.append(Socket.model_validate(row, by_alias=True))
-            except ValidationError as e:
-                logger.error(e)
-        yield d
+class Configuration(BaseModel):
+    tolerance: float = 0.25
+
+
+class DataModel(BaseModel):
+    sockets: List[List[MultiLevelSocket | Socket]]
+    configuration: Configuration = Field(default_factory=Configuration)
 
 
 if __name__ == "__main__":
+    filename: str = "data/0_25-small-set.json"
+    data = DataModel.model_validate_json(open(filename, "r").read())
     socket_generator = SocketGenerator(
-        sockets=list(parse_file("data/0_25-small-set.json")),
-        tolerance=0.25,
+        sockets=data.sockets,
+        tolerance=data.configuration.tolerance,
         stackable=True,
         rows=2,
     )

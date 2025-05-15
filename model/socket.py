@@ -20,6 +20,19 @@ class Socket(BaseModel, Tolerance):
     def add_tolerance(self, tolerance: float):
         self.diameter += tolerance
 
+    def __hash__(self):
+        return hash((self.diameter, self.height, self.name))
+
+    def __eq__(self, other) -> bool:
+        if not type(other) == Socket:
+            return False
+        other: Socket
+        return (
+            self.diameter == other.diameter
+            and self.height == other.height
+            and self.name == other.name
+        )
+
 
 class MultiLevelSocket(Socket, Tolerance):
     small_diameter: float = Field(
@@ -37,3 +50,19 @@ class MultiLevelSocket(Socket, Tolerance):
     def add_tolerance(self, tolerance: float):
         super().add_tolerance(tolerance)
         self.small_diameter += tolerance
+
+    def __hash__(self):
+        return hash(
+            (self.diameter, self.height, self.name, self.small_diameter, self.offset)
+        )
+
+    def __eq__(self, other):
+        if not type(other) == MultiLevelSocket:
+            return False
+        other: MultiLevelSocket
+        return (
+            self.diameter == other.diameter
+            and self.height == other.height
+            and self.small_diameter == other.small_diameter
+            and self.name == other.name
+        )

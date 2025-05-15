@@ -1,13 +1,14 @@
-import json
+import os
+import subprocess
 from pathlib import Path
-from typing import Iterable, List
+from typing import List
 
 from loguru import logger
 from pydantic import BaseModel, Field
-from pydantic_core import ValidationError
 
 from model.socket import MultiLevelSocket, Socket
 from model.socket_generator import SocketGenerator
+from model.configuration import Configuration
 
 metric_test_set = [
     Socket(height=28.5, diameter=18.35, name="13mm"),
@@ -50,22 +51,33 @@ imperial_test_set = [
 ]
 
 
-class Configuration(BaseModel):
-    tolerance: float = 0.25
-
-
 class DataModel(BaseModel):
     sockets: List[List[MultiLevelSocket | Socket]]
     configuration: Configuration = Field(default_factory=Configuration)
 
 
 if __name__ == "__main__":
-    filename: str = "data/0_25-small-set.json"
-    data = DataModel.model_validate_json(open(filename, "r").read())
+    input_file: Path = Path("data") / "0_5-long-metric.json"
+    data = DataModel.model_validate_json(open(input_file.absolute(), "r").read())
     socket_generator = SocketGenerator(
         sockets=data.sockets,
-        tolerance=data.configuration.tolerance,
-        stackable=True,
-        rows=2,
+        configuration=data.configuration,
     )
-    socket_generator.write_file(Path("main.scad"))
+    temp_file = Path("main.scad")
+    socket_generator.write_file(temp_file)
+    output_filename = Path("out") / input_file.name.replace(".json", ".stl")
+    try:
+        subprocess.run(
+            [
+                "openscad",
+                "-o",
+                f"{output_filename.relative_to('.')}",
+                "--export-format",
+                "binstl",
+                temp_file,
+            ]
+        )
+    except subprocess.TimeoutExpired:
+        logger.error("Command timed out")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed with return code {e.returncode}", e.stderr)

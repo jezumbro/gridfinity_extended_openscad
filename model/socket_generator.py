@@ -5,6 +5,7 @@ from typing import Iterable, List, Optional
 from loguru import logger
 from more_itertools.more import first, last
 
+from model.configuration import Configuration
 from model.socket import MultiLevelSocket, Socket
 
 
@@ -19,23 +20,24 @@ class SocketGenerator:
         self,
         sockets: List[List[MultiLevelSocket | Socket]],
         *,
-        tolerance: float = 0.25,
-        rows: Optional[int] = None,
-        columns: Optional[int] = None,
-        height: Optional[int] = None,
-        stackable: bool = False,
+        configuration: Configuration,
     ):
         for row in sockets:
-            max_height = max(s.height for s in row) + tolerance
+            max_height = max(s.height for s in row) + configuration.tolerance.height
             for socket in row:
                 socket.height = max_height
-                socket.add_tolerance(tolerance)
+                socket.add_tolerance(configuration.tolerance.diameter)
         self.sockets = sockets
-        self._rows = rows
-        self._columns = columns
-        self._height = height
-        self._stackable = stackable
-        logger.info(f"starting with {self.rows} rows and {self.columns} columns")
+        self._rows = configuration.rows
+        self._columns = configuration.columns
+        self._height = configuration.height
+        self._stackable = configuration.stackable
+        all_sockets = [s for row in sockets for s in row]
+        if len(all_sockets) != set(all_sockets):
+            logger.warning("WARN: duplicate sockets found!")
+        logger.info(
+            f"starting with gridBox({self.rows},{self.columns},{self.stackable_height})"
+        )
 
     @property
     def x_length(self):
@@ -81,8 +83,6 @@ class SocketGenerator:
 
     @property
     def height(self):
-        if h := self._height:
-            return h
         return math.ceil((self.socket_max_radius + self.z_grid) / self.z_grid)
 
     @property
@@ -94,7 +94,7 @@ class SocketGenerator:
         return math.ceil((self.socket_max_radius + self.z_grid) / self.z_grid)
 
     @property
-    def box_cutouts(self) -> str:
+    def make_box_cutouts(self) -> str:
         x_offset = self._offset_spacing
         z_offset = self.z_length - self.socket_max_radius
         box_z = (self.z_length - z_offset) + 1
@@ -111,7 +111,7 @@ class SocketGenerator:
         return f"translate([{x_offset:.3f},{y_offset:.3f},{z_offset:.3f}])cube([{full_width:.3f},{box_y:.3f},{box_z :.3f}]);"
 
     @property
-    def header_lines(self) -> Iterable[str]:
+    def make_header_lines(self) -> Iterable[str]:
         double_offset = self._offset_spacing * 2
         grid_block_line = (
             f"grid_block({self.columns},{self.rows},{self.stackable_height}"
@@ -140,6 +140,7 @@ class SocketGenerator:
                 [s.diameter for s in row],
                 1,
             )
+            logger.info(f"\trow #{row_index+1} spacing: {spacing:.3f}")
             for i, socket in enumerate(row):
                 trailing = spacing * i + self._offset_spacing
                 dx = trailing + sum((s.diameter for s in row[:i])) + socket.radius
@@ -154,8 +155,8 @@ class SocketGenerator:
                 yield from self.make_cylinder_lines(socket, dx, bool(row_index))
 
     @property
-    def generate_lines(self) -> Iterable[str]:
-        yield self.box_cutouts
+    def make_all_lines(self) -> Iterable[str]:
+        yield self.make_box_cutouts
         yield ""
         yield "// start cylinder lines"
         yield from self.socket_lines
@@ -184,8 +185,8 @@ class SocketGenerator:
             file.writelines(
                 f"  {line}\n"
                 for line in (
-                    *self.header_lines,
-                    *self.generate_lines,
+                    *self.make_header_lines,
+                    *self.make_all_lines,
                 )
             )
             file.write("}")

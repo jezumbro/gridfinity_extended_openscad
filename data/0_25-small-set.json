@@ -149,5 +149,13 @@
         "name": "9/16"
       }
     ]
-  ]
+  ],
+  "configuration": {
+    "rows": 2,
+    "tolerance": {
+      "diameter": 0.5,
+      "height": 1
+    },
+    "stackable": false
+  }
 }

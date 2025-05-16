@@ -12,4 +12,4 @@ class Configuration(BaseModel):
     rows: int | None = None
     columns: int | None = None
     height: int | None = None
-    per_row_height: bool = False
+    per_item_height: bool = False

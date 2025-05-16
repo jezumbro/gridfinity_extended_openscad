@@ -8,3 +8,4 @@ generated
 out
 .idea
 main.scad
+.coverage

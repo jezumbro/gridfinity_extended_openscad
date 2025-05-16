@@ -1,0 +1,119 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 17.2,
+        "d2": 11.9,
+        "height": 28,
+        "name": "8mm",
+        "offset": 15,
+        "transition": 4
+      },
+      {
+        "d1": 17.1,
+        "d2": 13.2,
+        "height": 28,
+        "name": "9mm",
+        "offset": 15,
+        "transition": 4
+      },
+      {
+        "d1": 17.1,
+        "d2": 14.8,
+        "height": 28,
+        "name": "10mm",
+        "offset": 15,
+        "transition": 3
+      },
+      {
+        "d1": 17.85,
+        "height": 28,
+        "name": "11mm"
+      },
+      {
+        "d1": 17.85,
+        "height": 28,
+        "name": "12mm"
+      },
+      {
+        "d1": 17.85,
+        "height": 28,
+        "name": "13mm"
+      },
+      {
+        "d1": 19.85,
+        "height": 28,
+        "name": "14mm"
+      },
+      {
+        "d1": 21.75,
+        "height": 28,
+        "name": "15mm"
+      }
+    ],
+    [
+      {
+        "d1": 17.2,
+        "d2": 10.2,
+        "height": 28,
+        "name": "1/4",
+        "offset": 14.75,
+        "transition": 4
+      },
+      {
+        "d1": 17.2,
+        "d2": 12.2,
+        "height": 28,
+        "name": "5/16",
+        "offset": 14.75,
+        "transition": 4
+      },
+      {
+        "d1": 17.2,
+        "d2": 14.5,
+        "height": 28,
+        "name": "3/8",
+        "offset": 14.25,
+        "transition": 4
+      },
+      {
+        "d1": 17.2,
+        "d2": 16,
+        "height": 28,
+        "name": "7/16",
+        "offset": 14.25,
+        "transition": 4
+      },
+      {
+        "d1": 17.75,
+        "height": 28,
+        "name": "1/2"
+      },
+      {
+        "d1": 19.8,
+        "height": 28,
+        "name": "9/16"
+      },
+      {
+        "d1": 21.9,
+        "height": 28.5,
+        "name": "5/8"
+      },
+      {
+        "d1": 23.9,
+        "height": 30.25,
+        "name": "5/8"
+      }
+    ]
+  ],
+  "configuration": {
+    "rows": 2,
+    "columns": 5,
+    "tolerance": {
+      "diameter": 1,
+      "height": 2
+    },
+    "per_item_height": true,
+    "stackable": true
+  }
+}

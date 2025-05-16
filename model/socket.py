@@ -5,7 +5,8 @@ from pydantic import AliasChoices, BaseModel, Field
 
 class Tolerance(abc.ABC):
     @abc.abstractmethod
-    def add_tolerance(self, tolerance: float) -> None: ...
+    def add_diameter_tolerance(self, tolerance: float) -> None: ...
+    def add_height_tolerance(self, tolerance: float) -> None: ...
 
 
 class Socket(BaseModel, Tolerance):
@@ -17,8 +18,11 @@ class Socket(BaseModel, Tolerance):
     def radius(self) -> float:
         return self.diameter / 2
 
-    def add_tolerance(self, tolerance: float):
+    def add_diameter_tolerance(self, tolerance: float):
         self.diameter += tolerance
+
+    def add_height_tolerance(self, tolerance: float) -> None:
+        self.height += tolerance
 
     def __hash__(self):
         return hash((self.diameter, self.height, self.name))
@@ -47,8 +51,12 @@ class MultiLevelSocket(Socket, Tolerance):
     def small_radius(self) -> float:
         return self.small_diameter / 2
 
-    def add_tolerance(self, tolerance: float):
-        super().add_tolerance(tolerance)
+    def add_height_tolerance(self, tolerance: float):
+        super().add_height_tolerance(tolerance)
+        self.offset += tolerance * 0.5
+
+    def add_diameter_tolerance(self, tolerance: float):
+        super().add_diameter_tolerance(tolerance)
         self.small_diameter += tolerance
 
     def __hash__(self):

@@ -23,10 +23,14 @@ class SocketGenerator:
         configuration: Configuration,
     ):
         for row in sockets:
+
             max_height = max(s.height for s in row) + configuration.tolerance.height
             for socket in row:
-                socket.height = max_height
-                socket.add_tolerance(configuration.tolerance.diameter)
+                if not configuration.per_item_height:
+                    socket.height = max_height
+                else:
+                    socket.height += configuration.tolerance.height
+                socket.add_diameter_tolerance(configuration.tolerance.diameter)
         self.sockets = sockets
         self._rows = configuration.rows
         self._columns = configuration.columns
@@ -203,7 +207,7 @@ class SocketGenerator:
     ) -> Iterable[str]:
         yield f"// {socket.name}"
         cylinder_lines = ["rotate([90,0,0])", f"translate([0, {z_offset:.3f}, 0])"]
-        extended_cylinder = socket.height + cylinder_offset + 1
+        extended_cylinder = socket.height + cylinder_offset + 4
         items = (
             (socket.height, socket.diameter, socket.height + offset),
             (extended_cylinder, socket.diameter - 4, extended_cylinder + offset),
@@ -257,7 +261,7 @@ class SocketGenerator:
                 ),
             ]
         )
-        extended_cylinder = socket.height + cylinder_offset + 1
+        extended_cylinder = socket.height + cylinder_offset + 4
 
         items = (
             (socket.offset, socket.diameter, socket.offset + offset),

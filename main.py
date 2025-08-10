@@ -57,7 +57,7 @@ class DataModel(BaseModel):
 
 
 if __name__ == "__main__":
-    input_file: Path = Path("data") / "0_375-short-set.json"
+    input_file: Path = Path("data") / "random.json"
     data = DataModel.model_validate_json(open(input_file.absolute(), "r").read())
     socket_generator = SocketGenerator(
         sockets=data.sockets,

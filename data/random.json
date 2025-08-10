@@ -1,0 +1,47 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 12.6,
+        "d2": 8,
+        "height": 77,
+        "name": null,
+        "offset": 14,
+        "transition": 4
+      },
+      {
+        "d1": 22.375,
+        "d2": 16,
+        "height": 77,
+        "name": null,
+        "offset": 25,
+        "transition": 7
+      },
+      {
+        "d1": 21.5,
+        "height": 62,
+        "name": "5/8 spark"
+      },
+      {
+        "d1": 27.5,
+        "height": 62,
+        "name": "13/16 spark"
+      },
+      {
+        "d1": 27.7,
+        "height": 77,
+        "name": "20mm"
+      }
+    ]
+  ],
+  "configuration": {
+    "rows": 2,
+    "columns": 4,
+    "tolerance": {
+      "diameter": 1,
+      "height": 1
+    },
+    "per_item_height": true,
+    "stackable": false
+  }
+}

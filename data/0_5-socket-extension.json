@@ -1,0 +1,20 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 22.3,
+        "d2": 16,
+        "height": 76.5,
+        "name": null,
+        "offset": 25.25,
+        "transition": 6.5
+      }
+    ]
+  ],
+  "configuration": {
+    "tolerance": {
+      "diameter": 1,
+      "height": 1
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 16.8,
+        "d2": 12,
+        "height": 28,
+        "name": "5/16",
+        "offset": 14.8,
+        "transition": 4
+      },
+      {
+        "d1": 16.8,
+        "d2": 14.2,
+        "height": 28,
+        "name": "3/8",
+        "offset": 14,
+        "transition": 4
+      },
+      {
+        "d1": 17.1,
+        "d2": 16.2,
+        "height": 28,
+        "name": "7/16",
+        "offset": 14.5,
+        "transition": 2
+      },
+      {
+        "d1": 17.85,
+        "height": 28,
+        "name": "1/2"
+      },
+      {
+        "d1": 19.85,
+        "height": 28,
+        "name": "9/16"
+      },{
+        "d1": 21.7,
+        "height": 28.5,
+        "name": "5/8"
+      }
+    ],
+    [
+      {
+        "d1": 24,
+        "height": 30,
+        "name": "11/16"
+      },
+      {
+        "d1": 25.9,
+        "height": 30.25,
+        "name": "3/4"
+      },
+      {
+        "d1": 28,
+        "height": 30.25,
+        "name": "13/16"
+      },
+      {
+        "d1": 29.8,
+        "height": 32,
+        "name": "7/8"
+      }
+    ]
+  ],
+  "configuration": {
+    "rows": 2,
+    "columns": 4,
+    "tolerance": {
+      "diameter": 1,
+      "height": 2
+    },
+    "per_item_height": true,
+    "stackable": true
+  }
+}

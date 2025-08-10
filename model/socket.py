@@ -12,7 +12,7 @@ class Tolerance(abc.ABC):
 class Socket(BaseModel, Tolerance):
     height: float
     diameter: float = Field(..., validation_alias=AliasChoices("diameter", "d1"))
-    name: str
+    name: str | None
 
     @property
     def radius(self) -> float:

@@ -151,11 +151,12 @@ class SocketGenerator:
                 dy = socket.height / 2 + self._offset_spacing
                 if row_index:
                     dy = self.y_length - (socket.height / 2 + self._offset_spacing)
-                yield (
-                    f"translate([{dx:.3f},{dy:.3f},{(self.z_length - socket.radius - 0.5):.3f}])"
-                    "rotate([0,0,270])"
-                    f'linear_extrude({self.z_length-socket.radius})text("{socket.name}",size=6,halign="center",valign="center");'
-                )
+                if socket.name:
+                    yield (
+                        f"translate([{dx:.3f},{dy:.3f},{(self.z_length - socket.radius - 0.5):.3f}])"
+                        "rotate([0,0,270])"
+                        f'linear_extrude({self.z_length-socket.radius})text("{socket.name}",size=6,halign="center",valign="center");'
+                    )
                 yield from self.make_cylinder_lines(socket, dx, bool(row_index))
 
     @property
@@ -304,8 +305,11 @@ class SocketGenerator:
         Determines the spacing between the sockets based on their diameters.
         The spacing is calculated as the maximum diameter plus a fixed spacing value.
         """
-        assert len(cylinders) > 1, "The list of diameters cannot be empty."
-        num_of_spaces = len(cylinders) - 1
+        number_of_cylinders = len(cylinders)
+        assert number_of_cylinders > 0, "The list of diameters cannot be empty."
+        num_of_spaces = number_of_cylinders - 1
+        if not num_of_spaces:
+            num_of_spaces = 2
         leftover = length - (sum(cylinders) + min_space * num_of_spaces)
         assert (
             leftover >= 0

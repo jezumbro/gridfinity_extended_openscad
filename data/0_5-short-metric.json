@@ -1,0 +1,53 @@
+{
+  "sockets": [
+    [
+      {
+        "d1": 20.5,
+        "d2": 21.85,
+        "height": 38,
+        "name": "14mm",
+        "offset": 20,
+        "transition": 3
+      },
+      {
+        "d1": 21.85,
+        "height": 38,
+        "name": "15mm"
+      },
+      {
+        "d1": 23.85,
+        "height": 38,
+        "name": "17mm"
+      },
+      {
+        "d1": 25.9,
+        "height": 38,
+        "name": "18mm"
+      },
+      {
+        "d1": 25.9,
+        "height": 38,
+        "name": "19mm"
+      },
+      {
+        "d1": 27.9,
+        "height": 38,
+        "name": "21mm"
+      },
+      {
+        "d1": 29.7,
+        "height": 38,
+        "name": "22mm"
+      }
+    ]
+  ],
+  "configuration": {
+    "columns": 5,
+    "rows": 2,
+    "tolerance": {
+      "diameter": 1,
+      "height": 2
+    },
+    "stackable": true
+  }
+}

@@ -1,7 +1,5 @@
 import pytest
 
-from model.socket import MultiLevelSocket, Socket
-
 
 @pytest.mark.parametrize(
     "length, diameters",

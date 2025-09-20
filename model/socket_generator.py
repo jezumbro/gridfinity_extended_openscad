@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 from loguru import logger
 from more_itertools.more import first, last
@@ -23,7 +23,6 @@ class SocketGenerator:
         configuration: Configuration,
     ):
         for row in sockets:
-
             max_height = max(s.height for s in row) + configuration.tolerance.height
             for socket in row:
                 if not configuration.per_item_height:

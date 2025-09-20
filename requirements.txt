@@ -2,3 +2,5 @@ more-itertools
 loguru
 pydantic
 cqgridfinity
+questionary
+ruff

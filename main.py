@@ -1,8 +1,8 @@
-import os
 import subprocess
 from pathlib import Path
 from typing import List
 
+import questionary
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -57,7 +57,12 @@ class DataModel(BaseModel):
 
 
 if __name__ == "__main__":
-    input_file: Path = Path("data") / "random.json"
+    data_dir = Path("data")
+    json_files = sorted((f.name for f in data_dir.glob("*.json")))
+
+    selected_file = questionary.select("Select a data file:", choices=json_files).ask()
+
+    input_file: Path = data_dir / selected_file
     data = DataModel.model_validate_json(open(input_file.absolute(), "r").read())
     socket_generator = SocketGenerator(
         sockets=data.sockets,

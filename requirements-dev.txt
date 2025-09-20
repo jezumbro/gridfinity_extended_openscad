@@ -6,3 +6,4 @@ pytest-watch
 pytest-cov
 black
 isort
+pre-commit

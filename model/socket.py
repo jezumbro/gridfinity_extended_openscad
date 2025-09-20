@@ -28,7 +28,7 @@ class Socket(BaseModel, Tolerance):
         return hash((self.diameter, self.height, self.name))
 
     def __eq__(self, other) -> bool:
-        if not type(other) == Socket:
+        if not isinstance(other, Socket):
             return False
         other: Socket
         return (
@@ -65,7 +65,7 @@ class MultiLevelSocket(Socket, Tolerance):
         )
 
     def __eq__(self, other):
-        if not type(other) == MultiLevelSocket:
+        if not isinstance(other, MultiLevelSocket):
             return False
         other: MultiLevelSocket
         return (
